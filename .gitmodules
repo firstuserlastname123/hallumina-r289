@@ -1,0 +1,12 @@
+[submodule "engine"]
+	path = engine
+	url = https://github.com/LostCityRS/Engine-TS.git
+	branch = 289
+[submodule "content"]
+	path = content
+	url = https://github.com/LostCityRS/Content.git
+	branch = 289
+[submodule "rs2b0t"]
+	path = rs2b0t
+	url = https://github.com/rs2b2t/rs2b0t.git
+	branch = main

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "revision": 289,
+  "toolchain": {
+    "node": "24.22.3",
+    "npm": "11.19.1",
+    "bun": "1.4.5",
+    "globalTypeScript": "5.9.3"
+  },
+  "lockedApplicationTools": {
+    "engineTypeScript": "5.8.3",
+    "engineTsx": "4.23.12",
+    "rs2b0tTypeScript": "5.9.3"
+  },
+  "upstreams": {
+    "engine": {
+      "url": "https://github.com/LostCityRS/Engine-TS.git",
+      "branch": "289",
+      "commit": "ddd01b3f32f0a04a18f05a468da962f57d0a1708"
+    },
+    "content": {
+      "url": "https://github.com/LostCityRS/Content.git",
+      "branch": "289",
+      "commit": "a60809082bc9f8fbdaa00c7b1a1d3fd6134c18fe"
+    },
+    "rs2b0t": {
+      "url": "https://github.com/rs2b2t/rs2b0t.git",
+      "branch": "main",
+      "commit": "27e57fa331656df5a0d9b7b1cd1f4ec0c44519bb"
+    }
+  },
+  "acceptance": {
+    "nativeLoginGameplaySaves": "deferred; not established by startup smoke",
+    "rs2b0tGameplayAndMultiBox": "deferred to PR #2; upstream only supports rs2b2t"
+  }
+}

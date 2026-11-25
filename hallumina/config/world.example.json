@@ -1,0 +1,26 @@
+{
+  "easyStartup": false,
+  "website": { "registration": false },
+  "web": { "port": 8888, "allowedOrigin": "", "managementPort": 8898 },
+  "engine": { "revision": 289 },
+  "node": {
+    "id": 10,
+    "port": 43594,
+    "members": true,
+    "production": false,
+    "debug": false,
+    "xpRate": 1
+  },
+  "login": { "enabled": false, "host": "localhost", "port": 43500 },
+  "friend": { "enabled": false, "host": "localhost", "port": 45099 },
+  "logger": { "enabled": false, "host": "localhost", "port": 43501 },
+  "db": { "backend": "sqlite", "host": "localhost", "user": "", "pass": "" },
+  "build": {
+    "srcDir": "../content",
+    "startup": false,
+    "verify": true,
+    "verifyFolder": true,
+    "verifyPack": true,
+    "liveReload": false
+  }
+}
