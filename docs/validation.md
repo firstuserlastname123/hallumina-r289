@@ -25,6 +25,7 @@ No upstream commit, lockfile or source file was changed.
 | Toolchain only | `bash /workspace/.hallumina-env/validate.sh` | PASS: typed compression/crypto, C++ N-API addon with OpenSSL/zlib on Node and Bun; Bun fixture 3 pass |
 | Reproducible install | `bash scripts/install.sh` | PASS: Engine npm ci (346 packages), rs2b0t frozen Bun install (169 packages checked), Content requires no install |
 | Pin/source verification | `node scripts/verify-upstreams.mjs` | PASS: origins, branches/ancestry, all exact commits, index gitlinks and clean source |
+| Fresh clone path | Recursive clone, `install.sh`, new runtime prepare/build/smoke | PASS: all exact gitlinks initialized, frozen installs, full build (15.957 seconds), startup/shutdown, clean source |
 | Engine TypeScript | `cd engine && node node_modules/typescript/bin/tsc --noEmit` | PASS with locked TypeScript 5.8.3 |
 | Engine lint | `cd engine && npm run lint` | PASS, 0 errors, 13 existing warnings |
 | Engine application build | `node scripts/runtime.mjs build` | PASS: full content/cache/RuneScript pack, initial build 21.268 seconds |
@@ -108,6 +109,27 @@ Disposable run artifacts were outside the repository at
 `/tmp/hallumina-pr1-native/` (`startup-smoke.log`, `native-client.png`, generated
 cache/config/keys). Application logs were under `/tmp/hallumina-*.log`. These are
 ephemeral local evidence, not required dependencies or committed artifacts.
+
+The independent fresh-clone check used:
+
+```sh
+git clone --no-hardlinks --recurse-submodules --branch feat/r289-bootstrap \
+  /workspace/hallumina-r289 /tmp/hallumina-pr1-fresh-clone
+cd /tmp/hallumina-pr1-fresh-clone
+node scripts/verify-upstreams.mjs
+bash scripts/install.sh
+export HALLUMINA_RUNTIME_DIR=/tmp/hallumina-pr1-fresh-runtime
+node scripts/runtime.mjs prepare
+node scripts/runtime.mjs build
+node scripts/runtime.mjs smoke
+git status --short
+git submodule foreach --recursive 'git status --short'
+```
+
+The parent was cloned locally from the committed feature branch; all three
+submodules were independently cloned over HTTPS from their upstream URLs. Both
+the parent and submodules were clean after the check. The second runtime was
+external, used a separate fresh RSA pair and shut down with exit 0.
 
 ## Remaining acceptance work
 
