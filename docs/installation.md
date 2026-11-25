@@ -51,7 +51,7 @@ that Node HTTPS download, which `install.sh` supplies. It preserves configured
 proxy/CA settings and TLS verification. No lifecycle scripts are disabled to hide
 test failures. npm 11 reports unapproved Prisma/esbuild lifecycle scripts; the
 Linux binaries used by the validated build work without changing allowScripts.
-Prisma migrations and account-backed support services are not validated here.
+Account-backed SQLite setup and migration options are in [gameplay](gameplay.md).
 
 Never run dependency installation while a runtime is active: the runtime shares
 the source Engine's `node_modules`, and reinstalling it can break worker imports.
@@ -75,8 +75,8 @@ symlink to the Engine's installed dependencies; it is not a relocatable release.
 Preparation excludes the published upstream private/public development keys and
 creates a fresh 1024-bit RSA pair with exponent 65537 for local protocol
 compatibility. It substitutes only the two public decimal RSA constants in the
-**staged** prebuilt native client. Both expected constants must occur exactly once
-or preparation fails. This keeps the source submodule untouched and the staged
+**staged** prebuilt native client. The pinned modulus/exponent call site must
+occur exactly once or preparation fails. This keeps the source submodule untouched and the staged
 client/server parameters aligned. This is a legacy local-development protocol,
 not a production cryptography configuration. No private key enters Git or logs.
 
@@ -98,8 +98,9 @@ support servers, no registration, no debug editor and no live repacking. The
 upstream config loader merges omitted fields with its defaults. It does not
 override `world.json` with process environment variables.
 
-Default listeners are web 8888, management 8898 and native TCP 43594. All bind
-`0.0.0.0`; keep them behind a local firewall or isolated computer. Management
+Default listeners are web 8888, management 8898 and native TCP 43594. Upstream
+hard-codes `0.0.0.0`; the Hallumina launcher confines the app and workers to
+`127.0.0.1`. Direct upstream entrypoints lack this restriction. Management
 includes unauthenticated configuration endpoints and must stay private. The
 startup smoke refuses Cloud-reserved ports and occupied listeners. Use distinct
 private ports in world.json if the defaults are occupied.
@@ -107,8 +108,9 @@ private ports in world.json if the defaults are occupied.
 Keys/config are under runtime `engine/data/config/`, potential saves under
 `engine/data/players/`, and SQLite under runtime `engine/db.sqlite`. The initial
 smoke uses no game accounts, creates no account database and leaves the three
-support services disabled. Adding account storage/registration requires a separate
-local migration/configuration review; never point it at external game accounts.
+support services disabled. Run the separate stopped `node scripts/accounts.mjs init`
+(or `init --offline-sql`) for native authentication. See [gameplay](gameplay.md)
+for first-login provisioning, fixtures, backups and acceptance checks.
 
 ## Native browser-loading check
 

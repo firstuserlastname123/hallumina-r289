@@ -1,7 +1,7 @@
 # Hallumina r289
 
-A self-hosted revision **289** server foundation built from LostCityRS Engine-TS
-and Content, with the original rs2b0t client pinned for later integration.
+A self-hosted revision **289** server built from pinned LostCityRS Engine-TS
+and Content, with authenticated local gameplay and the original rs2b0t/MultiBox.
 
 | Directory | Purpose |
 | --- | --- |
@@ -36,6 +36,9 @@ export HALLUMINA_RUNTIME_DIR="$(mktemp -d /tmp/hallumina-r289.XXXXXX)/world"
 node scripts/runtime.mjs prepare
 node scripts/runtime.mjs build
 node scripts/runtime.mjs smoke
+# Optional authenticated gameplay and original bot deployment, while stopped:
+node scripts/accounts.mjs init --offline-sql
+node scripts/deploy-rs2b0t.mjs
 node scripts/runtime.mjs start
 ```
 
@@ -43,10 +46,11 @@ Open <http://localhost:8888/rs2.cgi>. Stop with Ctrl+C and wait for
 `Server shutdown complete`. `smoke` starts and stops its own server; run it while
 the runtime is stopped. Configuration and persistence live in the external runtime,
 never the source checkout. Preparation refuses to overwrite an existing directory.
-The upstream services bind all interfaces: use a disposable, firewalled local
-computer and keep ports 8888, 8898 and 43594 private. This is a development setup.
+The Hallumina launcher confines upstream TCP/HTTP/WebSocket services and workers
+to IPv4 loopback. Always use this launcher; direct upstream entrypoints bind all
+interfaces. This remains a local development setup, with no public deployment.
 
 Read [development guidance](docs/development.md), [rs2b0t setup](docs/rs2b0t.md),
 [validation results](docs/validation.md) and [upgrade policy](docs/upstream-updates.md).
-Browser login/gameplay and MultiBox acceptance remain PR #2 work; compiling
-TypeScript alone does not establish gameplay compatibility.
+See [authenticated gameplay, fixtures and persistence](docs/gameplay.md) and
+[PR #2 acceptance evidence](docs/pr2-validation.md) for tested behavior and limits.

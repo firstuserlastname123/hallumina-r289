@@ -45,3 +45,11 @@ If any required gate is blocked, the compatibility PR remains unaccepted with
 the exact limitation recorded. PR #1 establishes the baseline but deliberately
 does not assert the login/gameplay/save/bot acceptance gates. Before accepting a
 future upstream update, complete those gates rather than inheriting that deferral.
+
+PR #2 supplies `node --test scripts/guards.test.mjs` (including a real RSA
+round trip through the pinned native call), `deploy-rs2b0t.mjs`, asset/hash
+verification and `browser-acceptance.mjs native|bot|multibox`. Rerun them on a
+new external runtime for each candidate. Regenerate collision/map data instead
+of reusing shared `out/`. Complete the interaction, earned-state, bank and
+save/restart comparisons in [gameplay](gameplay.md) and [rs2b0t](rs2b0t.md).
+Do not inherit a short sample's status for all scripts or background reliability.
