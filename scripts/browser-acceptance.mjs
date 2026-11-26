@@ -24,6 +24,7 @@ assert.equal(fs.statSync(credentialsFile).mode & 0o077, 0, 'Credentials file mus
 const credentials = JSON.parse(fs.readFileSync(credentialsFile));
 assert.notEqual(credentials.first.username, credentials.second.username, 'MultiBox needs distinct accounts.');
 const db = new DatabaseSync(path.join(engine, 'db.sqlite'), { readOnly: true });
+db.exec('PRAGMA busy_timeout=5000'); // connection-local wait, never change native DB state
 const loggedIn = username => db.prepare('SELECT logged_in FROM account_login JOIN account ON account.id=account_login.account_id WHERE username=? AND profile=?').get(username, 'main')?.logged_in === config.node.id;
 async function waitAccount(username, expected) {
     const deadline = Date.now() + 30_000;
@@ -165,4 +166,24 @@ try {
     evidence.result = 'PASS for the listed checks only';
     fs.writeFileSync(path.join(runtime, `acceptance-${mode}.json`), JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(evidence, null, 2));
+} catch (error) {
+    evidence.result = 'FAIL';
+    evidence.error = error.message;
+    evidence.frames = [];
+    for (const candidate of context.pages()) for (const frame of candidate.frames()) {
+        try {
+            const state = await Promise.race([
+                frame.evaluate(() => globalThis.rs2b0t ? ({ ingame: rs2b0t.client.ingame, scene: rs2b0t.client.sceneState,
+                    loginMessage: rs2b0t.client.loginMes1 + ' ' + rs2b0t.client.loginMes2,
+                    loopCycle: rs2b0t.client.constructor.loopCycle, tile: rs2b0t.reader.worldTile(), runner: rs2b0t.runner.state }) : null),
+                delay(3000).then(() => ({ diagnosticTimeout: true }))
+            ]);
+            evidence.frames.push(state);
+        } catch { evidence.frames.push({ detached: true }); }
+    }
+    evidence.httpErrors = httpErrors;
+    evidence.browserErrors = errors;
+    fs.writeFileSync(path.join(runtime, `acceptance-${mode}-failure.json`), JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600 });
+    await page.screenshot({ path: path.join(runtime, `acceptance-${mode}-failure.png`), timeout: 5000 }).catch(() => {});
+    throw error;
 } finally { await browser.close(); db.close(); }

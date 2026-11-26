@@ -73,7 +73,7 @@ A small first sample, with legitimately obtained tools and inventory space:
 | Activity | Library entry and local settings | Evidence to capture |
 | --- | --- | --- |
 | Woodcutting | Woodcutting → Woodcutter; Tree; location Auto or Use Start Position; Bank=false; purgePackOnStart=false; Buy/repair Off | Start/Stop, native chop animation, Logs and woodcutting XP increase |
-| Banking | Woodcutter; Draynor (trees); Bank=true; purgePackOnStart=true | Before: held logs; after: fewer held logs, same count added to bank |
+| Banking | Woodcutter; Use Custom Position 3233,3245,0; bankLocation=Varrock East; Bank=true; purgePackOnStart=true | Before: held logs; after: fewer held logs, same count added to bank; retain axe and conserve starter supplies |
 | Bank organization | Utility → BankSorter; sortBank=true; reportQuestJunk=false; dropQuestJunk=false | Native bank opens, insert moves acknowledged, sorted status |
 | Fishing (blocked sample) | Fishing → Fisher; Small net — shrimp/anchovy; Draynor Village or Use Start Position; Bank=false; cookMode=Off | Preserve restock/idle failure; distinguish manual Net results from script results |
 | Combat | Combat → AutoFighter; Chicken; Custom coordinates 3230,3298,0; melee/attack; Banking=None; foodWithdraw=0 for the brief low-risk test | Actual target health/damage and attack/HP XP; supervise HP, stop after evidence |
@@ -88,6 +88,14 @@ freeform retry produced no XP). A direct native Net action then caught shrimp
 and earned XP. This proves server fishing, not a passing Fisher script or
 automatic-restock test. Preserve these errors when comparing future pins.
 Inspect the [matrix](pr2-validation.md) for actual results.
+
+The correction harness now verifies automatic net withdrawal with a genuine
+inventory-0/bank-1 precondition and an authoritative inventory-1/bank-0 save.
+Its separate Al Kharid freeform gathering trial still failed: real combat led
+to death and zero Fishing XP. This is not a validated novice training route.
+See the [correction findings](pr2-validation.md#fisher-findings-and-precise-remaining-scope)
+for source-level combat-policy details, retained failure evidence and the
+unresolved earlier Draynor symptom. No adapter or upstream patch is claimed.
 
 Do not use upstream live harness helpers that teleport, grant items or max stats.
 No Hallumina API shim or rewritten script is supplied. The original server has
@@ -124,6 +132,16 @@ The hosted `/__rs2b0t/resources` telemetry endpoint returns 404 on this Engine;
 resource display is unavailable, and no fake endpoint is added.
 
 ## Validation and diagnostics
+
+Run the automatic original Woodcutter/banking/save acceptance on a **new**
+external runtime with `node scripts/script-acceptance.mjs --offline-sql`.
+It builds and publishes the pinned local bundle, uses disposable accounts and
+the supported tutorial fixture, and checks actual yields, deposits and saved
+state. It also runs all three browser regression modes below. See
+[the reproduction procedure](gameplay.md#repeat-browser-acceptance-on-cloud-or-ubuntu)
+for timeouts, private evidence and the separate `--fisher` diagnostic. This
+automates the previous supervised Woodcutting/banking sample without changing
+the upstream client, scripting API or scripts.
 
 ```sh
 node --test scripts/guards.test.mjs

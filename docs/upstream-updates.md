@@ -53,3 +53,10 @@ new external runtime for each candidate. Regenerate collision/map data instead
 of reusing shared `out/`. Complete the interaction, earned-state, bank and
 save/restart comparisons in [gameplay](gameplay.md) and [rs2b0t](rs2b0t.md).
 Do not inherit a short sample's status for all scripts or background reliability.
+
+Also run `scripts/script-acceptance.mjs` against a **new** external runtime for
+repeatable original Woodcutter yields, bank deposits and authoritative restart
+comparison. It prepares/builds/deploys that world itself. Use `--offline-sql`
+only for the documented pinned-SQL migration alternative, and `--fisher` for
+the separately reported fishing investigation. Preserve failed-run evidence;
+the old supervised sample does not satisfy this automatic gate for a new pin.

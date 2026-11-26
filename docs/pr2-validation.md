@@ -192,3 +192,221 @@ server-managed playerbots, replacement API, custom mechanics or automatic merge
 is included. Reproduce the same supervised procedure on Ubuntu using
 [gameplay](gameplay.md) and [rs2b0t](rs2b0t.md); preserve failures and expand the
 matrix one activity at a time.
+
+## PR #2 corrections — 2026-11-26
+
+This section records new executions on the published Hallumina Cloud environment;
+the supervised results above remain historical. Work continued from PR #2's
+`a8df1a0` on `feat/r289-gameplay-rs2b0t`, without another worktree or PR.
+Engine `ddd01b3f32f0a04a18f05a468da962f57d0a1708`, Content
+`a60809082bc9f8fbdaa00c7b1a1d3fd6134c18fe`, and rs2b0t
+`27e57fa331656df5a0d9b7b1cd1f4ec0c44519bb` remain unchanged and source-clean.
+
+### What changed and how to reproduce it
+
+`scripts/script-acceptance.mjs` now prepares a new external runtime, builds the
+real r289 cache, migrates a fresh account DB, publishes and verifies the original
+rs2b0t bundle, and drives the actual original library/runner. It performs the
+native guide-skip fixture, normal logout/shutdown, and a production-mode restart
+before measuring any earned state. Woodcutter uses supported settings, navigates
+to ordinary Lumbridge trees, earns at least two logs, and then uses its original
+startup banking behavior with Varrock East selected. A normal one-tile movement
+interrupts any last native chop after stopping the runner; it never changes XP,
+inventory, location or action results directly.
+
+Bank acceptance requires the real interface, acknowledged bank/deposit-side item
+counts, exact item conservation across inventory/equipment/bank, a retained axe,
+and the authoritative stopped save. The same world/keys/DB/save are restarted,
+the character reconnects and logs out, and `compare-persistence.mjs` compares all
+inventory slots, XP, levels, location, tutorial and permanent variables. Native,
+wrong-password and actual MultiBox browser regression checks follow.
+
+The optional `--fisher` diagnostic separately measures bank/inventory readiness,
+item names/IDs, the original restock plan/runner log, native combat clocks, spot
+actions, fishing inventory/XP and authoritative saves. Its net is first deposited
+with an actual native bank action; the test requires inventory 0 / bank 1 before
+starting Fisher. A second fresh mainland fixture provides a short route to the
+r289 Al Kharid small-net shore at 3270,3145. Native withdrawal, if required, is
+labelled as a control and cannot establish an automatic-restock pass.
+
+```sh
+source /workspace/.hallumina-env/env.sh
+bash scripts/install.sh
+node scripts/verify-upstreams.mjs
+node --test scripts/guards.test.mjs
+(cd engine && node node_modules/typescript/bin/tsc --noEmit && npm run lint)
+(cd rs2b0t && bun run typecheck && bun run lint && bun test)
+export HALLUMINA_RUNTIME_DIR="$(mktemp -d /tmp/hallumina-script.XXXXXX)/world"
+node scripts/script-acceptance.mjs --offline-sql --fisher
+```
+
+Omit `--fisher` for the primary acceptance only. Omit `--offline-sql` for the
+upstream Prisma CLI; these corrections used the documented exact pinned-SQL
+alternative, not another binary-download attempt. Individual gathering/banking
+deadlines are 180/240 seconds; Fisher restock/gather limits are 90 seconds each
+and shore travel is 180 seconds. Native tick stalls fail after 20 seconds;
+runner interruption, scene/login, subprocess and graceful-shutdown stages also
+have explicit deadlines. Failure JSON, runner samples and screenshots survive.
+
+The only fixture grants are one each of bronze axe, tinderbox, small fishing
+net, cooked shrimp, bucket, pot, bread, bronze pickaxe, bronze dagger, bronze
+sword, wooden shield and shortbow; 25 bronze arrows, 25 air runes, 15 mind
+runes, 6 water runes, 4 earth runes, 2 body runes; and 25 banked coins. The
+unchanged upstream fixture resets skills, sets tutorial=1000 and moves to
+Lumbridge. It grants zero Woodcutting XP and no logs. These supplies are recorded
+separately from earned logs/fish. Authentication stays enabled; production=true,
+debug=false and XP rate 1 apply during all measured gameplay.
+
+### Executed toolchain and safety checks
+
+| Check | Actual correction-run result |
+| --- | --- |
+| Locked install, `verify-upstreams.mjs` | PASS; frozen npm/Bun installs, exact origins/gitlinks/ancestry and clean submodules |
+| Engine cache build and original local bot deployment | PASS on each deployed acceptance runtime; original native client preserved, public RSA and all 72 deployed assets verified |
+| Engine typecheck / lint | PASS; lint has the same 13 warnings, zero errors |
+| rs2b0t typecheck / lint | PASS |
+| Full unmodified `bun test`, twice | **FAIL**, both runs: 12,448 pass, 355 upstream skips, 2 failures; 853 files, 72.78s and 82.71s |
+| `bun test test/scripts/JiveDragons/paint.test.ts` (diagnosis only) | PASS: all 8 tests, 0 fail, 612ms; does not replace either full-suite failure |
+| `node --test scripts/guards.test.mjs` | PASS: all 4, 251.68ms; real native RSA round trip, external-path/lock/port guards, loopback workers and exact offline migration protections |
+| Existing-runtime refusal probe | PASS; the new harness refused an existing runtime before writes; private-key and DB bytes remained identical |
+| Live `ss -ltn` probe | PASS: 8888, 8898, 43594, 43500 all bound to 127.0.0.1 |
+
+The two full-suite failures are unchanged upstream JiveDragons paint tests:
+`every rail label fits the eight-character rail` (missing `Clue`) and
+`the Clue section with a trail running and a park reason stays inside the panel`
+(missing `hard clue`). Both fail in the combined suite and pass in the isolated
+file. This establishes a combined-suite limitation, not an all-green result;
+no upstream test was changed, disabled, narrowed or used as a substitute.
+
+### Retained failed attempts and runtime findings
+
+All paths below are external private ephemeral evidence, not release
+dependencies. Logs/credentials/screenshots/saves/keys were never added to Git.
+
+| Attempt | Duration | Actual result and correction |
+| --- | --- | --- |
+| `/tmp/hallumina-corrections-run1` | 23.898s | Startup/protocol smoke passed, then account init safely refused an existing DB. Merely importing/starting the unauthenticated Engine creates a DB; the account preparation procedure now omits smoke before init. No DB was deleted/reset. |
+| `...-run2` | 207.159s | Woodcutter 0→50 XP, 2 earned logs, inventory 2→0 / bank 0→2, axe retained, all items conserved. Both authoritative save snapshots were produced, but the harness's comparison-log filename incorrectly included an absolute path. Filename handling was fixed. Running the exact comparator separately passed all fields and 214 permanent variables (native logout clock 216→16). Overall attempt remains FAIL. |
+| `...-run3` | 62.780s | Failed with `ERR_CONNECTION_REFUSED`: World ready precedes the separate web listener. Startup now also polls the real local client URL before login. Normal shutdown passed. |
+| `...-run4` | 478.954s | Woodcutting/banking and authoritative restart comparison passed again (2 logs, 50 XP, 83.893s banking, 17.507s restart stage). Fisher travel hit its 180s deadline, and rapid consecutive browser suites later timed out in MultiBox scene loading. An independent fresh-server MultiBox retry passed two sessions and logout/reconnect; the final harness respects the native 15s device-login window between suites and retains per-frame failure diagnostics. No rate limit was disabled. |
+| `...-run5` | 197.531s | Again earned 2 logs/50 XP and observed inventory 2→0 / bank 0→2 with all items conserved; a read-only account-state query then hit `database is locked` during logout/save. Both browser harnesses now use a connection-local 5s SQLite busy timeout. This does not alter DB contents or upstream transactions. Normal shutdown passed; overall attempt remains FAIL. |
+
+The early Fisher observations did **not** establish restocking: stopping
+Woodcutter as soon as earned logs reached the bank left the fixture net carried.
+The final diagnostic explicitly deposits it and checks missing gear before
+starting Fisher. A carried net is never counted as an original-script withdrawal.
+The earlier Varrock-to-shore navigation failure also cannot establish a fishing
+failure or success. Pinned Content places the selected Net+Bait saltfish at Al
+Kharid (`0_51_49_saltfish`, `fishing_movement_al_kharid_enum`); the later-revision
+Lumbridge swamp location initially assumed by that diagnostic is not used.
+
+### Final executed acceptance
+
+The final fresh-world command was:
+
+```sh
+HALLUMINA_RUNTIME_DIR=/tmp/hallumina-corrections-run6 \
+  node scripts/script-acceptance.mjs --offline-sql --fisher
+```
+
+**PASS for Woodcutting, banking, persistence and browser regressions**, exit 0,
+597.512 seconds total. The separate Fisher result is **INCOMPLETE**; a completed
+diagnostic phase is not a passing fishing test.
+
+| Stage | Duration | Observed result |
+| --- | --- | --- |
+| Fresh prepare/build/migration/original deployment | 30.549s | Real cache, new RSA, exact pinned SQL, original bundles, 72 asset hashes verified |
+| Upstream fixture, two isolated accounts | 38.644s | Native character-design Accept and guide dialogue; normal logout/stop; production restored before gameplay |
+| Original Woodcutter navigation/chopping | 50.366s | 0→50 Woodcutting XP, 0→2 Logs, native movement from Lumbridge to ordinary trees |
+| Original Woodcutter bank travel/deposit/save | 83.735s | Varrock East, inventory Logs 2→0, bank Logs 0→2, all item quantities conserved, axe retained |
+| Normal restart/reconnect/logout/authoritative comparison | 16.898s | Exact location, all XP/levels, tutorial, inventory/equipment/bank slots and 214 permanent variables; only the expected native `last_logout` clock differs |
+| Bounded Fisher diagnosis | 263.843s | Automatic net withdrawal verified; gather trial 90s timeout, zero fish and zero Fishing XP, real combat/death documented below |
+| Native / bot negative-auth / actual MultiBox | 113.104s | All three existing browser modes passed; both accounts online with distinct player slots, first logout/reconnect while second stayed online, then normal logout |
+
+The native Varrock scene, actual bank with two Logs, and two live original
+MultiBox profiles were also visually inspected in the private screenshots.
+No critical browser JavaScript errors or missing required assets were recorded.
+MultiBox's optional `/__rs2b0t/resources` still returned 404. Core Woodcutting and
+banking had already produced the same two-log/50-XP result on the independent
+`run2` and `run4` worlds; their whole-run failures are retained above rather than
+being relabelled as successful end-to-end runs.
+
+Final evidence is in `/tmp/hallumina-corrections-run6-acceptance/result.json`,
+the script sample JSON files, `fixture-save.json`, `earned-save.json`,
+`restarted-save.json`, `fisher-diagnostic.json`, `fisher-restock-save.json`,
+`fisher-save.json`, private build/server/browser logs, and the runtime's
+`acceptance-native.json`, `acceptance-bot.json`, `acceptance-multibox.json`.
+The Fisher travel sample in this execution is named `Fisher-safe-shore-travel.json`;
+that historical filename does not establish safety and the harness now calls it
+`Fisher-shore-travel.json`. The screenshots and credential file remain external.
+
+### Fisher findings and precise remaining scope
+
+The original restock failure was **not reproduced** after establishing an actual
+missing-net precondition. Native preparation deposited fixture item **303**;
+both bank and deposit-side snapshots were fresh/ready with inventory 0, bank 1,
+and the original `fishingRestockPlan` returned one Small fishing net. Fisher's
+own log recorded `restock: withdraw 1× Small fishing net`. Inventory became 1,
+bank became 0, and the authoritative save independently confirmed those counts.
+No manual withdrawal fallback was used. This rules out a blanket name/ID,
+withdrawal-packet or r289 bank-interface incompatibility for this tested case;
+it does not retroactively explain the earlier Draynor observation.
+
+Gathering was tested separately with the second freshly prepared account.
+Pinned r289 NPC **330** at the Al Kharid shore exposed **Net + Bait**, matching
+the original small-net method, and the carried net was present. Native WalkTo
+reached 3270,3145. The account took real damage during arrival (HP 10→8), then
+Fisher's **Use Start Position** trial took further hits to HP 0 and respawned
+near Lumbridge. Its net was lost under normal death rules; the saved inventory
+retained only shortbow, bronze sword and wooden shield. Fishing XP remained
+**0** and there were **no raw shrimps**. This is an explicit failed gathering
+trial, not a manual native Net success, a successful selection, or an animation.
+
+Source inspection explains the tested combat behavior: `GatherCamp.ts`'s
+`isAutoLocation()` includes Use Start/Custom Position; `GatheringBot.ts` logs
+`mob flee off (may die)` and omits WaitStickyCombat/FleeCombat for that policy;
+`GatheringBotLogic.ts:gatheringCombatPolicy()` sets `flee=false`, and Gather
+yields during combat. The captures show genuine repeated damage, not merely a
+stale combat flag; after death the flag cleared and the script attempted to
+return to its anchor without a net. The exact attacking NPC was not captured.
+The former named-Draynor `combat: waiting clear (no attacker)` symptom and
+post-death recovery are not established as fixed by this fresh-account test.
+
+No Hallumina protocol adapter or item-name shim is justified by these results,
+and no upstream patch was applied. A next configuration trial can evaluate the
+existing legacy **None** location (which enables the original flee policy), or
+a genuinely safe/qualified camp, with threat observations and bounded recovery.
+Neither is claimed as passing here. If freeform mode needs a new selectable
+flee policy, the source change belongs in upstream rs2b0t: add the setting to
+Fisher's schema in `src/bot/scripts/index.ts`, carry it through GatheringBot,
+and use the same resolved policy for both combat task installation and
+`combatPolicy()` instead of the two `isAutoLocation()` decisions. That is a
+future reviewed upstream change or narrowly scoped Hallumina patch PR, not a
+verified fix or permission to move/edit this pin. The combat/death limitation
+remains incomplete without delaying the completed primary acceptance.
+
+### Files, security and review status
+
+Actual modified files: `scripts/script-acceptance.mjs` (new),
+`scripts/browser-acceptance.mjs`, `docs/gameplay.md`, `docs/rs2b0t.md`,
+`docs/upstream-updates.md`, and this `docs/pr2-validation.md`. The browser harness
+adds private failure diagnostics and a read-only connection busy timeout; native
+authentication, account/save formats, client assets and gameplay mechanics are
+unchanged. No submodule, gitlink, upstream revision or lockfile changed.
+
+Runtime guards passed again after implementation (4/4, 265.27ms). Live `ss -ltn`
+showed only 127.0.0.1 for 8888, 8898, 43594 and 43500; all four were gone after
+the final graceful shutdown. Both account DB staff levels were 0, with measured
+production=true/debug=false/XP rate 1 and login enabled. The existing-runtime
+refusal probe preserved both private-key and DB bytes. Syntax, whitespace,
+pin/source and staged-artifact checks passed. No real player save was accessed,
+reset, overwritten or used as a fixture.
+
+The corrections are ready for final review in the existing draft PR #2.
+They are **not an all-green merge recommendation**: the full upstream unit
+suite has two reproducible combined-suite failures, Fisher gathering/death
+recovery remains incomplete, and hosted telemetry remains unavailable. No new
+full tutorial, combat, broad script-library, long background soak, public/home-lab
+deployment or full Content `_test` claim is made. The original supervised combat
+and broader gameplay evidence above was preserved and was not rerun here.
+No merge or automatic merge was performed.

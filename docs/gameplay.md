@@ -14,12 +14,17 @@ bash scripts/install.sh
 export HALLUMINA_RUNTIME_DIR="$(mktemp -d /tmp/hallumina-gameplay.XXXXXX)/world"
 node scripts/runtime.mjs prepare
 node scripts/runtime.mjs build
-node scripts/runtime.mjs smoke
 node scripts/accounts.mjs init
 node scripts/deploy-rs2b0t.mjs
 node scripts/verify-deployment.mjs
 node scripts/runtime.mjs start
 ```
+
+Initialize accounts before the first server start. Even an unauthenticated
+`runtime.mjs smoke` imports the upstream SQLite connection and creates an empty
+database; `accounts.mjs init` correctly refuses to overwrite it. Use a separate
+fresh runtime for that bootstrap-only smoke. Do not delete an existing database
+to make initialization pass.
 
 Expect `World ready`, followed by loopback listeners for web 8888, management
 8898, TCP 43594 and login 43500. Check with `ss -ltn`. Open
@@ -121,6 +126,49 @@ probes protect builds, deployment, init, backup and start; after a crash, inspec
 processes and `ss -ltn` before manually removing a stale operation lock.
 
 ## Repeat browser acceptance on Cloud or Ubuntu
+
+For automated original-script Woodcutting, banking and save/restart acceptance,
+stop other local worlds and run the following after the locked install:
+
+```sh
+source /workspace/.hallumina-env/env.sh  # prepared Cloud only
+export HALLUMINA_RUNTIME_DIR="$(mktemp -d /tmp/hallumina-script.XXXXXX)/world"
+node scripts/script-acceptance.mjs --offline-sql
+```
+
+Omit `--offline-sql` to use the upstream Prisma migration CLI. The harness owns
+only a **new** external runtime, builds its real cache and local rs2b0t bundles,
+creates private random credentials, completes the supported guide-skip dialogue,
+logs out and restarts in normal production mode before measuring gameplay.
+It records the fixture grants separately, including its net/tools, food, runes
+and 25 banked coins; no logs or Woodcutting XP are granted.
+
+The original Woodcutter navigates to ordinary Lumbridge trees near 3233,3245,
+earns at least two logs with 25 XP each, then restarts with banking enabled and
+Varrock East selected. The harness checks the real bank and deposit-side
+inventory, conserves **all** item quantities and retains the axe. It logs out,
+stops the world, reads the authoritative save with the upstream loader, restarts
+the same runtime, reconnects and compares saves. Native authentication,
+wrong-password rejection and actual two-profile MultiBox checks run afterward.
+
+Scene/login, runner state, native tick progress, gathering (180 seconds), bank
+travel/deposit (240 seconds), shutdown and subprocess stages have explicit
+deadlines. A stopped/crashed runner or stalled client fails with diagnostics.
+JSON, script samples, server/build logs, credentials (0600) and screenshots stay
+under the private external `${HALLUMINA_RUNTIME_DIR}-acceptance/` directory.
+Failures retain their runtime and evidence; choose a new path for another run.
+The test refuses an existing runtime and never accepts real-player credentials.
+
+Add `--fisher` for a bounded diagnostic after the completed save comparison.
+It records original automatic net restocking and a bounded Al Kharid shore trial,
+including bank/inventory snapshots, gear planning, combat clocks, fishing spots,
+runner logs and the final save. Restocking uses the banked Woodcutter account;
+gathering uses a second fresh mainland account to avoid long bank-to-shore
+transit obscuring the fishing diagnosis. If needed, native net withdrawal is a separately
+labelled diagnostic control. The measured freeform shore trial took combat
+damage and died without fishing XP; it is not a validated novice training route.
+Fisher failure remains explicit in its evidence and does not replace or
+indefinitely delay the Woodcutting/banking results.
 
 Install/use your system Chromium, with the locked `playwright-core` from rs2b0t.
 Start the authenticated runtime in terminal 1. In terminal 2, export the same
