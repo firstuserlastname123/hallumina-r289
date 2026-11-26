@@ -410,3 +410,132 @@ full tutorial, combat, broad script-library, long background soak, public/home-l
 deployment or full Content `_test` claim is made. The original supervised combat
 and broader gameplay evidence above was preserved and was not rerun here.
 No merge or automatic merge was performed.
+
+## Final pre-merge JiveDragons baseline comparison — 2026-11-26
+
+**Classification: upstream baseline failures at the pinned rs2b0t commit,
+not regressions introduced by Hallumina PR #2.** The same two failures and
+identical expectation/received error blocks reproduced on both parent branches.
+
+### Controlled comparison
+
+The existing checkout was initially clean on feature commit
+`13213858f0ee34f8a3d7e3c1087a9e3fdbac0963`. After testing it, the parent checkout
+was switched to clean `main` at `5472be1215d9ab95b982be500c273791b8f872aa` and the
+same commands were repeated. The original feature branch was restored before
+this documentation edit. No second worktree, duplicate source checkout,
+dependency reinstall, runtime start, gameplay change or upstream edit was used.
+
+Both parent gitlinks and the unchanged submodule checkout selected rs2b0t
+`27e57fa331656df5a0d9b7b1cd1f4ec0c44519bb` (tree
+`6de99d631a5eca32bf850d94e397ce8e7b731d1d`). All test processes ran sequentially
+from `/workspace/hallumina-r289/rs2b0t`, using the same Bun **1.4.5**
+(`a7733435c`) binary, Node **24.22.3** toolchain and inherited environment
+snapshot. The pinned `bunfig.toml` contains only the existing
+`test/setup-dom.ts` preload. Package manifest, lockfile, configuration, preload
+and paint-test hashes matched on both branches. A hash of installed dependency
+files and symlink targets was unchanged before/after both runs: 7,502 regular
+files, SHA-256
+`a6bccc07589006ea32e90bf05f7acc419b056e974e4cf1baedf657437842eded`.
+The submodule source remained clean throughout.
+
+From the repository root, source `/workspace/.hallumina-env/env.sh`; on **each**
+parent branch, run these exact commands from `rs2b0t/`:
+
+```sh
+bun test
+bun test test/scripts/JiveDragons/paint.test.ts
+```
+
+| Parent branch / command | Pass | Fail | Skip | Exit | Wall time |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Feature, complete `bun test` | 12,448 | 2 | 355 | 1 | 64.113s |
+| Clean `main`, complete `bun test` | 12,448 | 2 | 355 | 1 | 63.900s |
+| Feature, isolated paint file | 8 | 0 | 0 | 0 | 0.269s |
+| Clean `main`, isolated paint file | 8 | 0 | 0 | 0 | 0.269s |
+
+Each full run executed 12,805 tests across 853 files. Wall times include process
+startup. The 355 skips are unchanged upstream skips; no test was edited,
+disabled, rewritten or newly skipped.
+
+### Exact failures on both full-suite runs
+
+`JiveDragons paint > every rail label fits the eight-character rail`,
+`test/scripts/JiveDragons/paint.test.ts:111:27`:
+
+```text
+error: expect(received).toContain(expected)
+
+Expected to contain: "Clue"
+Received: [
+  "Statistics", "Options", "starting", "JiveDragons", "-", "Overview", "Combat", "Levels", "Loot",
+  "Jive scripts", "Runtime: 0:00:00", "Kills: 0", "Kills/hr: n/a", "Trips: 0", "Spot: (2744, 9457, 0)",
+  "HP", "100%", "no 'Lobster' left in the bank after a full trip. The run", "  stopped at the booth rather than walk back to the dragon…",
+  "Pause", "Stop"
+]
+```
+
+`JiveDragons paint, mid-clue > the Clue section with a trail running and a park reason stays inside the panel`,
+`test/scripts/JiveDragons/paint.test.ts:156:50`:
+
+```text
+error: expect(received).toContain(expected)
+
+Expected to contain: "hard clue"
+Received: "Statistics|Options|starting|JiveDragons|-|Overview|Combat|Levels|Loot|Jive scripts|Runtime: 0:00:00|Kills: 0|Kills/hr: n/a|Trips: 0|Spot: (2744, 9457, 0)|HP|100%|no 'Lobster' left in the bank after a full trip. The run|  stopped at the booth rather than walk back to the dragon…|Pause|Stop"
+```
+
+### Ordering and shared-state evidence
+
+Both complete logs show `JiveDragons/safety.test.ts` immediately before
+`JiveDragons/paint.test.ts`. Read-only inspection of the pinned source identifies
+the state path:
+
+- `src/bot/scripts/JiveDragons/JiveDragons.ts:187` declares module-level
+  `SOLVE_CLUES=true`; `onStart()` at line 1254 overwrites it from settings, and
+  `onPaint()` at line 1597 uses it to include or omit the Clue rail entry.
+- `test/scripts/JiveDragons/safety.fixture.ts:98` starts scenarios with
+  `solveClues:false`. `restoreSafety()` restores mocks and Sustain, but leaves
+  the JiveDragons module variables set by those scenarios.
+- The paint tests create a fresh bot without calling `onStart()` and reset
+  paint UI state, not the module's clue setting. With Clue omitted from the
+  available sections, `PaintFrame.rail()` falls back to Overview when the
+  mid-clue test selects Clue. This explains both missing strings.
+
+Two additional executions used only the original, unmodified safety and paint
+files, on the restored feature branch, to distinguish shared-state interference
+from a parallel execution race:
+
+```sh
+bun test --max-concurrency=1 test/scripts/JiveDragons/safety.test.ts test/scripts/JiveDragons/paint.test.ts
+bun test --isolate --max-concurrency=1 test/scripts/JiveDragons/safety.test.ts test/scripts/JiveDragons/paint.test.ts
+```
+
+| Diagnostic mode, safety then paint in both logs | Pass | Fail | Skip | Wall time |
+| --- | ---: | ---: | ---: | ---: |
+| Shared process/module state, concurrency limited to one | 48 | 2 | 0 | 0.417s |
+| Fresh per-file isolation, concurrency limited to one | 50 | 0 | 0 | 0.465s |
+
+The shared-state pair reproduces the same two paint failures even with concurrency
+limited to one. Per-file isolation removes them while executing all the same
+50 selected tests. This supports an upstream test-order/module-state leak;
+parallel execution is not required to reproduce it. These diagnostic subset
+runs do **not** replace either complete failing `bun test` run and are not an
+all-green full-suite claim.
+
+### Recommendation and retained evidence
+
+**These two failures should not block PR #2 as Hallumina regressions.** They
+reproduce on clean `main` with the identical pinned source, dependency bytes,
+configuration and environment, and the source/serial/isolation evidence explains
+the failure mechanism. Track upstream test-state isolation separately rather
+than changing pinned source or weakening tests in this PR. Other PR acceptance
+criteria and the previously documented Fisher limitation remain separate.
+
+Private full logs, isolated logs, comparison metadata and ordering diagnostics
+are retained under `/tmp/hallumina-pr2-premerge-kv79eqah/`:
+`feature-full.log`, `main-full.log`, `feature-isolated.log`, `main-isolated.log`,
+`serial-pair.log`, `isolated-pair.log`, `comparison.json` and `ordering.json`.
+That directory contains evidence/controller files only; all tests used the
+original submodule path. Only this validation document changed. No PR was
+created and PR #2 was not merged.
