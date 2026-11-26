@@ -9,7 +9,7 @@ export function git(cwd, ...args) {
     return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim();
 }
 
-export function verify() {
+export function verify({ quiet = false } = {}) {
     assert.equal(manifest.revision, 289);
     for (const [name, pin] of Object.entries(manifest.upstreams)) {
         const dir = `${root}${name}`;
@@ -21,7 +21,7 @@ export function verify() {
         assert.equal(git(root, 'ls-files', '--stage', '--', name), `160000 ${pin.commit} 0\t${name}`, `${name}: unexpected gitlink`);
         git(dir, 'merge-base', '--is-ancestor', pin.commit, `refs/remotes/origin/${pin.branch}`);
         assert.equal(git(dir, 'status', '--porcelain', '--untracked-files=normal'), '', `${name}: source changes`);
-        console.log(`${name}: ${pin.branch} ${pin.commit} (${pin.url})`);
+        if (!quiet) console.log(`${name}: ${pin.branch} ${pin.commit} (${pin.url})`);
     }
 }
 

@@ -1,5 +1,10 @@
 # PR #1 validation evidence
 
+This is historical PR #1 evidence. See [PR #2 validation](pr2-validation.md) for
+authenticated gameplay, persistence, deployment and MultiBox results. PR #2 also
+corrects the native RSA argument-order defect that PR #1's welcome-screen check
+could not detect.
+
 Validated 2026-11-25 on the existing Debian 13 x86_64 cloud computer, using
 Node 24.22.3, npm 11.19.1 and Bun 1.4.5. The computer exposes about 9.7 GiB RAM;
 its cgroup limit is 8 GiB, with no swap. No resource limit prevented this PR's

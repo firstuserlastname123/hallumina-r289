@@ -21,6 +21,11 @@ bash scripts/install.sh
 node scripts/runtime.mjs prepare
 node scripts/runtime.mjs build
 node scripts/runtime.mjs smoke
+node --test scripts/guards.test.mjs
+# Optional account-backed acceptance on that fresh stopped runtime:
+node scripts/accounts.mjs init --offline-sql
+node scripts/deploy-rs2b0t.mjs
+node scripts/verify-deployment.mjs
 git diff --check
 git submodule foreach --recursive 'git status --short'
 ```
@@ -41,3 +46,10 @@ Do not reinstall dependencies while any linked runtime is running.
 Keep a PR focused, report actual commands and failures, and leave merging to a
 human. Do not force all components forward to make a failing combination pass.
 The initial baseline and deferred checks are recorded in [validation](validation.md).
+PR #2 adds [authenticated gameplay/persistence](gameplay.md), the actual
+[rs2b0t deployment and script procedure](rs2b0t.md), and
+[application acceptance evidence](pr2-validation.md). Run browser checks against
+an explicitly started authenticated loopback runtime; keep credentials, screenshots
+and saved-state snapshots external. Inspect each check's stated scope. Keep the
+original script library unchanged and record failures rather than turning live
+E2E cheats into acceptance fixtures.

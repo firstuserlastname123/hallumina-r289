@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { root } from './verify-upstreams.mjs';
 
 export async function smoke(engine, config) {
     assert.equal(config.website.registration, false, 'Smoke requires registration disabled.');
@@ -27,7 +28,7 @@ export async function smoke(engine, config) {
     }
     const logPath = path.join(engine, '../startup-smoke.log');
     const log = fs.createWriteStream(logPath, { mode: 0o600 });
-    const child = spawn(process.execPath, ['--import', 'tsx', 'src/app.ts'], { cwd: engine, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, ['--import', path.join(root, 'hallumina/loopback.mjs'), '--import', 'tsx', 'src/app.ts'], { cwd: engine, stdio: ['ignore', 'pipe', 'pipe'] });
     let output = '';
     for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { output += chunk; log.write(chunk); });
     const closed = once(child, 'close');
